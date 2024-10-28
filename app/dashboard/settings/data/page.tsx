@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Database, Table, Link as LinkIcon } from "lucide-react";
 import { ApiSettingsForm } from "@/components/api-settings-form";
+import { TableStructureView } from "@/components/table-structure-view";
 
 export default function DataSettings() {
   return (
@@ -16,6 +17,7 @@ export default function DataSettings() {
       <Tabs defaultValue="connection" className="space-y-4">
         <TabsList>
           <TabsTrigger value="connection">API接続設定</TabsTrigger>
+          <TabsTrigger value="tables">テーブル構造</TabsTrigger>
           <TabsTrigger value="mapping">データマッピング</TabsTrigger>
           <TabsTrigger value="categories">カテゴリ設定</TabsTrigger>
         </TabsList>
@@ -37,6 +39,23 @@ export default function DataSettings() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="tables">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="h-5 w-5" />
+                テーブル構造
+              </CardTitle>
+              <CardDescription>
+                データベースのテーブル一覧
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TableStructureView />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="mapping">
           <Card>
             <CardHeader>
@@ -49,7 +68,7 @@ export default function DataSettings() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">先にAPI接続を設定してください。</p>
+              <p className="text-muted-foreground">先にテーブル構造を取得してください。</p>
             </CardContent>
           </Card>
         </TabsContent>
