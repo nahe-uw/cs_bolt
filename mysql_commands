@@ -98,6 +98,8 @@ DESCRIBE VerificationToken;
 DESCRIBE Chat;
 DESCRIBE Message;
 
+SELECT * FROM User;
+
 # rootでのみ実行可能な操作の例
 CREATE USER 'new_user'@'localhost' IDENTIFIED BY 'password';
 GRANT ALL PRIVILEGES ON *.* TO 'user'@'localhost';

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Database, Table, Link as LinkIcon } from "lucide-react";
+import { ApiSettingsForm } from "@/components/api-settings-form";
 
 export default function DataSettings() {
   return (
@@ -30,16 +31,8 @@ export default function DataSettings() {
                 クライアントのデータベースとの接続設定
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="apiUrl">API URL</Label>
-                <Input id="apiUrl" placeholder="https://api.example.com/v1" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="apiToken">認証トークン</Label>
-                <Input id="apiToken" type="password" />
-              </div>
-              <Button className="w-full">接続テスト</Button>
+            <CardContent>
+              <ApiSettingsForm />
             </CardContent>
           </Card>
         </TabsContent>
