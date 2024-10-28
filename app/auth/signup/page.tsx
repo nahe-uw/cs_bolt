@@ -13,12 +13,15 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,11 +35,42 @@ export default function SignUp() {
       return;
     }
 
-    // TODO: Implement registration logic
-    toast({
-      title: "開発中",
-      description: "登録機能は現在実装中です",
-    });
+    try {
+      setIsLoading(true);
+      
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'エラーが発生しました');
+      }
+
+      toast({
+        title: "登録完了",
+        description: "アカウントが作成されました",
+      });
+
+      // ログインページへリダイレクト
+      router.push('/auth/signin');
+    } catch (error) {
+      toast({
+        title: "エラー",
+        description: error instanceof Error ? error.message : 'エラーが発生しました',
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -58,6 +92,7 @@ export default function SignUp() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={isLoading}
             />
           </div>
           <div className="space-y-2">
@@ -68,6 +103,7 @@ export default function SignUp() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              disabled={isLoading}
             />
           </div>
           <div className="space-y-2">
@@ -78,18 +114,19 @@ export default function SignUp() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
+              disabled={isLoading}
             />
           </div>
-          <Button type="submit" className="w-full">
-            登録
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "登録中..." : "登録"}
           </Button>
+          <div className="mt-4 text-center text-sm">
+            すでにアカウントをお持ちの方は{" "}
+            <Link href="/auth/signin" className="text-primary hover:underline">
+              ログイン
+            </Link>
+          </div>
         </form>
-        <div className="mt-4 text-center text-sm">
-          すでにアカウントをお持ちの方は{" "}
-          <Link href="/auth/signin" className="text-primary hover:underline">
-            ログイン
-          </Link>
-        </div>
       </CardContent>
     </Card>
   );

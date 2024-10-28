@@ -1,0 +1,109 @@
+# 不要なユーザーの削除
+DROP USER 'client_user'@'localhost';
+DROP USER 'service_user'@'localhost';
+
+# 削除の確認
+SELECT User, Host FROM mysql.user;
+
+# データベースの作成
+CREATE DATABASE cs_bolt;
+
+# 新しいユーザーの作成（.envファイルの設定に合わせる）
+CREATE USER 'user'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';
+
+# 権限の付与
+GRANT ALL PRIVILEGES ON cs_bolt.* TO 'user'@'localhost';
+FLUSH PRIVILEGES;
+
+# データベース一覧の確認
+SHOW DATABASES;
+
+# ユーザー一覧の確認
+SELECT User, Host FROM mysql.user;
+
+# データベース一覧を確認
+SHOW DATABASES;
+
+# cs_boltデータベースの権限を確認
+SHOW GRANTS FOR 'user'@'localhost';
+
+# 既存の権限を確実に付与し直す
+GRANT ALL PRIVILEGES ON cs_bolt.* TO 'user'@'localhost';
+FLUSH PRIVILEGES;
+
+# 必要に応じてパスワードを再設定
+ALTER USER 'user'@'localhost' IDENTIFIED BY 'password';
+
+# 不要なデータベースの削除
+DROP DATABASE service_database;
+DROP DATABASE client_database;
+
+# 削除の確認
+SHOW DATABASES;
+
+# ユーザーの権限を確認
+SHOW GRANTS FOR 'user'@'localhost';
+
+# cs_boltデータベースを使用する
+USE cs_bolt;
+
+# テーブル一覧を確認（まだ何もないはずです）
+SHOW TABLES;
+
+# ユーザーのパスワードを確認できる形式で表示
+SELECT User, Host, authentication_string FROM mysql.user WHERE User = 'user';
+
+# 権限の確認
+SHOW GRANTS FOR 'user'@'localhost';
+
+# 既存のユーザーを削除
+DROP USER 'user'@'localhost';
+
+# ユーザーを作成（シンプルな認証方式）
+CREATE USER 'user'@'localhost' IDENTIFIED BY '#Ken121937';
+
+# 権限を付与
+GRANT ALL PRIVILEGES ON cs_bolt.* TO 'user'@'localhost';
+FLUSH PRIVILEGES;
+
+# ユーザーが作成されたか確認
+SELECT User, Host FROM mysql.user WHERE User = 'user';
+
+# 権限を確認
+SHOW GRANTS FOR 'user'@'localhost';
+
+# すべてのデータベースに対する権限を付与
+GRANT ALL PRIVILEGES ON *.* TO 'user'@'localhost' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+
+# 権限を確認
+SHOW GRANTS FOR 'user'@'localhost';
+
+EXIT;
+
+# MySQLへのログイン
+mysql -u root -p
+
+# cs_boltデータベースを使用
+USE cs_bolt;
+
+# テーブル一覧を表示
+SHOW TABLES;
+
+# 各テーブルの詳細構造を確認
+DESCRIBE Account;
+DESCRIBE Session;
+DESCRIBE User;
+DESCRIBE VerificationToken;
+DESCRIBE Chat;
+DESCRIBE Message;
+
+# rootでのみ実行可能な操作の例
+CREATE USER 'new_user'@'localhost' IDENTIFIED BY 'password';
+GRANT ALL PRIVILEGES ON *.* TO 'user'@'localhost';
+DROP USER 'user'@'localhost';
+
+# 一般ユーザーで実行可能な操作の例（権限が付与されている場合）
+USE cs_bolt;
+SELECT * FROM users;
+INSERT INTO users (name, email) VALUES ('test', 'test@example.com');

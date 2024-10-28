@@ -1,0 +1,174 @@
+// schema.prisma
+
+datasource db {
+  provider = "mysql" 
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                 Int                 @id @default(autoincrement())
+  email              String              @unique
+  password           String
+  created_at         DateTime            @default(now())
+  updated_at         DateTime            @updatedAt
+  apiConnections     APIConnection[]
+  mappingDatas       MappingData[]
+  tableRelations     TableRelation[]
+  dataCategories     DataCategory[]
+  knowledge          Knowledge[]
+  trainingModels     TrainingModel[]
+  inquiryHistories   InquiryHistory[]
+  serviceAccounts    ServiceAccount[]
+  trainingDatas      TrainingData[]
+}
+
+model APIConnection {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  apiUrl    String
+  apiToken  String
+  tables    Table[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@map("APIConnections")
+}
+
+model Table {
+  id              Int           @id @default(autoincrement())
+  apiConnectionId Int
+  tableName       String
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @updatedAt
+  apiConnection   APIConnection @relation(fields: [apiConnectionId], references: [id])
+}
+
+model MappingData {
+  id               Int              @id @default(autoincrement())
+  userId           Int
+  tableName        String
+  tableDescription String?
+  columnName       String
+  columnDescription String?
+  isUserId         Boolean          @default(false)
+  created_at       DateTime         @default(now())
+  updated_at       DateTime         @updatedAt
+  valueMappings    ValueMapping[]
+  user             User             @relation(fields: [userId], references: [id])
+
+  @@map("MappingData")
+}
+
+model ValueMapping {
+  id            Int        @id @default(autoincrement())
+  mappingDataId Int
+  value         String
+  meaning       String
+  created_at    DateTime   @default(now())
+  mappingData   MappingData @relation(fields: [mappingDataId], references: [id])
+
+  @@map("ValueMappings")
+}
+
+model TableRelation {
+  id           Int    @id @default(autoincrement())
+  userId       Int
+  fromTable    String
+  fromColumn   String
+  toTable      String
+  toColumn     String
+  created_at   DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@map("TableRelations")
+}
+
+model DataCategory {
+  id               Int                  @id @default(autoincrement())
+  userId           Int
+  categoryName     String
+  created_at       DateTime             @default(now())
+  categoryTableMappings CategoryTableMapping[]
+  user             User                 @relation(fields: [userId], references: [id])
+
+  @@map("DataCategories")
+}
+
+model CategoryTableMapping {
+  id          Int          @id @default(autoincrement())
+  categoryId  Int
+  tableName   String
+  created_at  DateTime     @default(now())
+  dataCategory DataCategory @relation(fields: [categoryId], references: [id])
+
+  @@map("CategoryTableMappings")
+}
+
+enum KnowledgeType {
+  url
+  pdf
+}
+
+model Knowledge {
+  id           Int         @id @default(autoincrement())
+  userId       Int
+  knowledgeName String
+  type         KnowledgeType
+  content      String
+  created_at   DateTime    @default(now())
+  user         User        @relation(fields: [userId], references: [id])
+
+  @@map("Knowledge")
+}
+
+model TrainingModel {
+  id           Int       @id @default(autoincrement())
+  userId       Int
+  modelName    String
+  endpointUrl  String
+  status       String
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+  user         User      @relation(fields: [userId], references: [id])
+
+  @@map("TrainingModels")
+}
+
+model InquiryHistory {
+  id                Int      @id @default(autoincrement())
+  userId            Int
+  customerUserId    String
+  inquiryContent    String
+  generatedResponse String
+  correctedResponse String?
+  created_at        DateTime @default(now())
+  user              User     @relation(fields: [userId], references: [id])
+
+  @@map("InquiryHistory")
+}
+
+model ServiceAccount {
+  id                 Int      @id @default(autoincrement())
+  userId             Int
+  serviceAccountKey  String
+  created_at         DateTime @default(now())
+  user               User     @relation(fields: [userId], references: [id])
+
+  @@map("ServiceAccounts")
+}
+
+model TrainingData {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  fileName   String
+  filePath   String
+  created_at DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@map("TrainingData")
+}
