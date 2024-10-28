@@ -27,7 +27,7 @@ export function useTableStructure() {
       }
       
       const data = await response.json();
-      setTables(data.tables);
+      setTables(data.tables); // ここで全てのテーブルをセット
     } catch (err) {
       setError(err instanceof Error ? err.message : '予期せぬエラーが発生しました');
     } finally {
@@ -43,13 +43,17 @@ export function useTableStructure() {
   }, [session]);
 
   // テーブル情報の削除
-  const deleteTables = async () => {
+  const deleteTables = async (tableIds: number[]) => {
     try {
       setIsLoading(true);
       setError(null);
       
       const response = await fetch('/api/settings/tables', {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tableIds }),
       });
 
       if (!response.ok) {
@@ -57,7 +61,8 @@ export function useTableStructure() {
         throw new Error(data.error || 'テーブル情報の削除に失敗しました');
       }
       
-      setTables([]);
+      // 削除後にデータを再取得
+      await fetchTables();
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : '予期せぬエラーが発生しました');

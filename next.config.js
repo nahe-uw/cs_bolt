@@ -4,6 +4,9 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: { unoptimized: true },
+  experimental: {
+    outputFileTracingIgnores: ['**/node_modules/.cache/**'],
+  },
 };
 
 module.exports = nextConfig;

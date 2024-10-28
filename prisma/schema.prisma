@@ -27,16 +27,16 @@ model User {
 }
 
 model APIConnection {
-  id        Int       @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   userId    Int
   apiUrl    String
   apiToken  String
-  tables    Table[]
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  user      User      @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@map("APIConnections")
+  @@unique([userId, apiUrl]) // ユーザーIDとAPI URLの組み合わせを一意にする
+  user      User     @relation(fields: [userId], references: [id])
+  tables    Table[]
 }
 
 model Table {

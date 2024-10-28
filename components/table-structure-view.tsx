@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -16,6 +17,7 @@ import { RefreshCw, Trash2 } from "lucide-react";
 export function TableStructureView() {
   const { tables, isLoading, error, fetchTables, deleteTables } = useTableStructure();
   const { toast } = useToast();
+  const [selectedTables, setSelectedTables] = useState<Set<number>>(new Set());
 
   const handleRefresh = async () => {
     try {
@@ -35,12 +37,14 @@ export function TableStructureView() {
 
   const handleDelete = async () => {
     try {
-      const success = await deleteTables();
+      // 選択されたテーブルを削除
+      const success = await deleteTables(Array.from(selectedTables));
       if (success) {
         toast({
           title: "削除完了",
-          description: "テーブル情報を削除しました",
+          description: "選択したテーブル情報を削除しました",
         });
+        setSelectedTables(new Set()); // 選択をクリア
       }
     } catch (error) {
       toast({
@@ -49,6 +53,18 @@ export function TableStructureView() {
         variant: "destructive",
       });
     }
+  };
+
+  const toggleSelection = (id: number) => {
+    setSelectedTables(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
   };
 
   // エラー表示をUIの一部として表示
@@ -60,6 +76,7 @@ export function TableStructureView() {
             <TableRow>
               <TableHead>テーブル名</TableHead>
               <TableHead>API URL</TableHead>
+              <TableHead>選択</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -67,7 +84,14 @@ export function TableStructureView() {
               <TableRow key={table.id}>
                 <TableCell>{table.tableName}</TableCell>
                 <TableCell className="text-muted-foreground text-sm truncate max-w-md">
-                  {table.apiUrl}
+                  {table.apiUrl ? table.apiUrl : 'API URLが設定されていません'} 
+                </TableCell>
+                <TableCell>
+                  <input
+                    type="checkbox"
+                    checked={selectedTables.has(table.id)}
+                    onChange={() => toggleSelection(table.id)}
+                  />
                 </TableCell>
               </TableRow>
             ))}
@@ -103,7 +127,7 @@ export function TableStructureView() {
             variant="outline"
             size="sm"
             onClick={handleDelete}
-            disabled={isLoading}
+            disabled={isLoading || selectedTables.size === 0}
           >
             <Trash2 className="h-4 w-4 mr-2" />
             削除

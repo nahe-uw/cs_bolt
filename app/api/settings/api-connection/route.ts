@@ -21,31 +21,14 @@ export async function POST(req: Request) {
       );
     }
 
-    // 既存の設定を確認
-    const existingConnection = await prisma.aPIConnection.findFirst({
-      where: { userId: parseInt(session.user.id) }
+    // 新規設定を作成
+    const apiConnection = await prisma.aPIConnection.create({
+      data: {
+        userId: parseInt(session.user.id),
+        apiUrl: api_url,
+        apiToken: auth_token,
+      },
     });
-
-    let apiConnection;
-    if (existingConnection) {
-      // 既存の設定を更新
-      apiConnection = await prisma.aPIConnection.update({
-        where: { id: existingConnection.id },
-        data: { 
-          apiUrl: api_url,
-          apiToken: auth_token,
-        },
-      });
-    } else {
-      // 新規設定を作成
-      apiConnection = await prisma.aPIConnection.create({
-        data: {
-          userId: parseInt(session.user.id),
-          apiUrl: api_url,
-          apiToken: auth_token,
-        },
-      });
-    }
 
     return NextResponse.json({ 
       message: 'API接続設定が保存されました',
