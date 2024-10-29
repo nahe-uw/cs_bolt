@@ -37,9 +37,10 @@ export function useTableStructure() {
 
   // コンポーネントマウント時に自動でデータを取得
   useEffect(() => {
-    if (session) {
-      fetchTables();
-    }
+    // セッションの有無に関わらず、初期取得を行わない
+    // if (session) {
+    //   fetchTables();
+    // }
   }, [session]);
 
   // テーブル情報の削除

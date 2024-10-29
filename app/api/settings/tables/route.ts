@@ -53,20 +53,42 @@ export async function GET() {
           throw new Error('無効なデータ形式です。オブジェクト形式のデータが必要です。');
         }
 
-        // 既存のテーブル情を削除
-        await prisma.table.deleteMany({
+        // 削除対象のテーブルを確認
+        const existingTables = await prisma.table.findMany({
           where: { apiConnectionId: apiConnection.id }
         });
 
-        // オブジェクトのキーをテーブル名として保存
+        const tablesToDelete = existingTables.filter(table => {
+          return !Object.keys(data).includes(table.tableName);
+        });
+
+        if (tablesToDelete.length > 0) {
+          await prisma.table.deleteMany({
+            where: {
+              id: { in: tablesToDelete.map(table => table.id) }
+            }
+          });
+        }
+
+        // 新しいテーブルを作成
         const savedTables = await Promise.all(
           Object.keys(data).map(async (tableName) => {
-            return await prisma.table.create({
-              data: {
+            const existingTable = await prisma.table.findFirst({
+              where: {
                 apiConnectionId: apiConnection.id,
                 tableName: tableName,
               },
             });
+
+            if (!existingTable) {
+              return await prisma.table.create({
+                data: {
+                  apiConnectionId: apiConnection.id,
+                  tableName: tableName,
+                },
+              });
+            }
+            return existingTable;
           })
         );
 
@@ -115,38 +137,103 @@ export async function GET() {
   }
 }
 
-// API接続情報の削除
 export async function DELETE(req: Request) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
-    }
-
-    const { tableIds } = await req.json();
-
-    if (!Array.isArray(tableIds) || tableIds.length === 0) {
-      return NextResponse.json({ error: '削除するテーブルが選択されていません' }, { status: 400 });
-    }
-
-    // 選択されたテーブル情報を削除
-    await prisma.table.deleteMany({
-      where: {
-        id: { in: tableIds },
-        apiConnection: {
-          userId: parseInt(session.user.id)
-        }
+    try {
+      const session = await getServerSession(authOptions);
+      if (!session?.user?.id) {
+        return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
       }
-    });
-
-    return NextResponse.json({
-      message: '選択したテーブル情報を削除しました'
-    });
-  } catch (error) {
-    console.error('テーブル情報削除エラー:', error);
-    return NextResponse.json(
-      { error: 'テーブル情報の削除に失敗しました' },
-      { status: 500 }
-    );
-  }
+  
+      const { tableIds } = await req.json();
+  
+      if (!Array.isArray(tableIds) || tableIds.length === 0) {
+        return NextResponse.json({ error: '削除するテーブルが選択されていません' }, { status: 400 });
+      }
+  
+      // 選択されたテーブル情報を削除
+      await prisma.table.deleteMany({
+        where: {
+          id: { in: tableIds },
+          apiConnection: {
+            userId: parseInt(session.user.id)
+          }
+        }
+      });
+  
+      // 削除したテーブルに関連するAPI接続情報を、他に関連するテーブルがなければ削除
+      const apiConnectionIds = await prisma.aPIConnection.findMany({
+        where: {
+          userId: parseInt(session.user.id),
+          tables: { none: {} } // 他に関連するテーブルがないAPI接続のみ選択
+        },
+        select: { id: true }
+      });
+  
+      if (apiConnectionIds.length > 0) {
+        await prisma.aPIConnection.deleteMany({
+          where: {
+            id: { in: apiConnectionIds.map(conn => conn.id) }
+          }
+        });
+      }
+  
+      return NextResponse.json({
+        message: '選択したテーブルと不要なAPI接続を削除しました'
+      });
+    } catch (error) {
+      console.error('テーブル情報削除エラー:', error);
+      return NextResponse.json(
+        { error: 'テーブル情報の削除に失敗しました' },
+        { status: 500 }
+      );
+    }
 }
+
+// // API接続情報の削除
+// export async function DELETE(req: Request) {
+//   try {
+//     const session = await getServerSession(authOptions);
+//     if (!session?.user?.id) {
+//       return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
+//     }
+
+//     const { tableIds } = await req.json();
+
+//     if (!Array.isArray(tableIds) || tableIds.length === 0) {
+//       return NextResponse.json({ error: '削除するテーブルが選択されていません' }, { status: 400 });
+//     }
+
+//     // 選択されたテーブル情報を削除
+//     const deletedTables = await prisma.table.deleteMany({
+//       where: {
+//         id: { in: tableIds },
+//         apiConnection: {
+//           userId: parseInt(session.user.id)
+//         }
+//       }
+//     });
+
+//     // 削除されたテーブルに関連するAPI接続情報を削除
+//     const apiConnectionIds = await prisma.table.findMany({
+//       where: { id: { in: tableIds } },
+//       select: { apiConnectionId: true }
+//     });
+
+//     await prisma.aPIConnection.deleteMany({
+//       where: {
+//         id: { in: apiConnectionIds.map(conn => conn.apiConnectionId) },
+//         userId: parseInt(session.user.id)
+//       }
+//     });
+
+//     return NextResponse.json({
+//       message: '選択したテーブル情報と関連するAPI接続情報を削除しました'
+//     });
+//   } catch (error) {
+//     console.error('テーブル情報削除エラー:', error);
+//     return NextResponse.json(
+//       { error: 'テーブル情報の削除に失敗しました' },
+//       { status: 500 }
+//     );
+//   }
+// }
